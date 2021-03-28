@@ -8,8 +8,8 @@
 #include "kinect.h"
 
 namespace renderer {
-void render(std::mutex& m, Kinect kinect, int pointNum,
-    const std::shared_ptr<std::vector<float>>& sptr_points);
+void render(std::mutex& m, Kinect kinect, int numPoints,
+    std::shared_ptr<std::vector<float>>& sptr_points);
 };
 
 #endif /* RENDERER_H */
