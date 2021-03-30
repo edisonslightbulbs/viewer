@@ -3,39 +3,29 @@
 #define TINYPLY_IMPLEMENTATION
 #include "tinyply.h"
 
+#include "point.h"
 #include "viewer.h"
-#include "segment.h"
-#include <k4a/k4a.h>
 
-void preprocess(std::mutex& m, Kinect& kinect, const int& numPoints,
-    std::shared_ptr<std::vector<float>>& sptr_points)
+void context(std::mutex& m, Kinect& kinect,
+    std::shared_ptr<std::vector<float>>& sptr_points,
+    std::shared_ptr<std::pair<Point, Point>>& sptr_threshold)
 {
-    std::vector<Point> points = segment::cut(kinect.m_points);
-    std::vector<float> x;
-    std::vector<float> y;
-    std::vector<float> z;
 
-    for (const auto& point : points) {
-        x.push_back(point.m_x);
-        y.push_back(point.m_y);
-        z.push_back(point.m_z);
-    }
-    float xMax = *std::max_element(x.begin(), x.end());
-    float xMin = *std::min_element(x.begin(), x.end());
-    float yMax = *std::max_element(y.begin(), y.end());
-    float yMin = *std::min_element(y.begin(), y.end());
-    float zMax = *std::max_element(z.begin(), z.end());
-    float zMin = *std::min_element(z.begin(), z.end());
+    Point min;
+    Point max;
+    min = sptr_threshold->first;
+    max = sptr_threshold->second;
 
     int width = k4a_image_get_width_pixels(kinect.m_pclImage);
     int height = k4a_image_get_height_pixels(kinect.m_pclImage);
 
     for (int i = 0; i < width * height; i++) {
-        if ((*sptr_points)[3 * i + 0] > xMax || (*sptr_points)[3 * i + 0] < xMin
-            || (*sptr_points)[3 * i + 1] > yMax
-            || (*sptr_points)[3 * i + 1] < yMin
-            || (*sptr_points)[3 * i + 2] > zMax
-            || (*sptr_points)[3 * i + 2] < zMin) {
+        if ((*sptr_points)[3 * i + 0] > max.m_x
+            || (*sptr_points)[3 * i + 0] < min.m_x
+            || (*sptr_points)[3 * i + 1] > max.m_y
+            || (*sptr_points)[3 * i + 1] < min.m_y
+            || (*sptr_points)[3 * i + 2] > max.m_z
+            || (*sptr_points)[3 * i + 2] < min.m_z) {
             (*sptr_points)[3 * i + 0] = 0.f;
             (*sptr_points)[3 * i + 1] = 0.f;
             (*sptr_points)[3 * i + 2] = 0.f;
@@ -44,8 +34,9 @@ void preprocess(std::mutex& m, Kinect& kinect, const int& numPoints,
     }
 }
 
-void renderer::render(std::mutex& m, Kinect kinect, int numPoints,
-    shared_ptr<std::vector<float>>& sptr_points)
+void viewer::draw(std::mutex& m, Kinect kinect, int numPoints,
+    shared_ptr<std::vector<float>>& sptr_points,
+    std::shared_ptr<std::pair<Point, Point>>& sptr_threshold)
 {
     /** create window and bind its context to the main thread */
     pangolin::CreateWindowAndBind("VIGITIA", 2560, 1080);
@@ -83,16 +74,15 @@ void renderer::render(std::mutex& m, Kinect kinect, int numPoints,
     while (true) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /** update point cloud every 10 ms */
-        usleep(10000);
-        kinect.getPcl(sptr_points);
-
-        // todo: there needs to be a kinect.(getfastPcl) here!!
-        preprocess(m, kinect, numPoints, sptr_points);
-
-        vA.Upload((void*)sptr_points->data(), numPoints * 3 * sizeof(float));
-        cA.Upload((void*)colours.data(), numPoints * 3 * sizeof(uint8_t));
-
+        kinect.capture();
+        if (m.try_lock()) {
+            kinect.pclImage(sptr_points);
+            context(m, kinect, sptr_points, sptr_threshold);
+            vA.Upload(
+                (void*)sptr_points->data(), numPoints * 3 * sizeof(float));
+            cA.Upload((void*)colours.data(), numPoints * 3 * sizeof(uint8_t));
+            m.unlock();
+        }
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
 
@@ -106,5 +96,8 @@ void renderer::render(std::mutex& m, Kinect kinect, int numPoints,
             kinect.close();
             std::exit(0);
         }
+
+        /** update point cloud every 15 ms */
+        usleep(15000);
     }
 }
