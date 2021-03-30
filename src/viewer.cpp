@@ -3,7 +3,7 @@
 #define TINYPLY_IMPLEMENTATION
 #include "tinyply.h"
 
-#include "renderer.h"
+#include "viewer.h"
 #include "segment.h"
 #include <k4a/k4a.h>
 
