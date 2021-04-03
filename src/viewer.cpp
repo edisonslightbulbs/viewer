@@ -5,7 +5,7 @@
 
 #include "viewer.h"
 
-void viewer::draw(Kinect& kinect)
+void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 {
     /** create window and bind its context to the main thread */
     pangolin::CreateWindowAndBind("VIGITIA", 2560, 1080);
@@ -20,11 +20,14 @@ void viewer::draw(Kinect& kinect)
     // pangolin::GetBoundWindow()->RemoveCurrent();
 
     /** create vertex and colour buffer objects and register them with CUDA */
-    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, kinect.getNumPoints(),
-        GL_FLOAT, 3, GL_STATIC_DRAW);
-    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, kinect.getNumPoints(),
-        GL_UNSIGNED_BYTE, 3, GL_STATIC_DRAW);
-    std::vector<uint8_t> colours(kinect.getNumPoints() * 3, 255);
+    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
+        GL_FLOAT, 3,
+        GL_STATIC_DRAW); // todo: (1/7) resource race handled correctly?
+    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
+        GL_UNSIGNED_BYTE, 3,
+        GL_STATIC_DRAW); // todo: (2/7) resource race handled correctly?
+    std::vector<uint8_t> colours(sptr_kinect->getNumPoints() * 3,
+        255); // todo: (3/7) resource race handled correctly?
 
     /** define camera render object for scene browsing */
     pangolin::OpenGlRenderState camera(
@@ -43,13 +46,18 @@ void viewer::draw(Kinect& kinect)
     while (true) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        kinect.getCapture();
-        kinect.getPclImage();
-        // kinect.updateContext();
-        vA.Upload((void*)kinect.getPcl().data(),
-            kinect.getNumPoints() * 3 * sizeof(float));
-        cA.Upload(
-            (void*)colours.data(), kinect.getNumPoints() * 3 * sizeof(uint8_t));
+        sptr_kinect
+            ->getCapture(); // todo: (4/7) resource race handled correctly?
+        sptr_kinect
+            ->getPclImage(); // todo: (5/7) resource race handled correctly?
+        vA.Upload((void*)sptr_kinect->getContextPcl()->data(),
+            sptr_kinect->getNumPoints() * 3
+                * sizeof(
+                    float)); // todo: (6/7) resource race handled correctly?
+        cA.Upload((void*)colours.data(),
+            sptr_kinect->getNumPoints() * 3
+                * sizeof(
+                    uint8_t)); // todo: (7/7) resource race handled correctly?
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
 
@@ -59,8 +67,8 @@ void viewer::draw(Kinect& kinect)
 
         /** ungracious global exit */
         if (pangolin::ShouldQuit()) {
-            kinect.release();
-            kinect.close();
+            sptr_kinect->release();
+            sptr_kinect->close();
             std::exit(0);
         }
 
