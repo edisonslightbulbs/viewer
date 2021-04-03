@@ -4,6 +4,8 @@
 #include "tinyply.h"
 
 #include "viewer.h"
+#include <chrono>
+#include <thread>
 
 void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 {
@@ -21,13 +23,10 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 
     /** create vertex and colour buffer objects and register them with CUDA */
     pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
-        GL_FLOAT, 3,
-        GL_STATIC_DRAW); // todo: (1/7) resource race handled correctly?
+        GL_FLOAT, 3, GL_STATIC_DRAW);
     pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
-        GL_UNSIGNED_BYTE, 3,
-        GL_STATIC_DRAW); // todo: (2/7) resource race handled correctly?
-    std::vector<uint8_t> colours(sptr_kinect->getNumPoints() * 3,
-        255); // todo: (3/7) resource race handled correctly?
+        GL_UNSIGNED_BYTE, 3, GL_STATIC_DRAW);
+    std::vector<uint8_t> colours(sptr_kinect->getNumPoints() * 3, 255);
 
     /** define camera render object for scene browsing */
     pangolin::OpenGlRenderState camera(
@@ -42,31 +41,26 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
                   -640.0f / 480.0f)
               .SetHandler(new pangolin::Handler3D(camera));
 
-    /** main render thread */
+    /** render point cloud */
     while (true) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         sptr_kinect->getFrame();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         vA.Upload((void*)sptr_kinect->getContext()->data(),
-            sptr_kinect->getNumPoints() * 3
-                * sizeof(
-                    float)); // todo: (6/7) resource race handled correctly?
+            sptr_kinect->getNumPoints() * 3 * sizeof(float));
         cA.Upload((void*)colours.data(),
-            sptr_kinect->getNumPoints() * 3
-                * sizeof(
-                    uint8_t)); // todo: (7/7) resource race handled correctly?
+            sptr_kinect->getNumPoints() * 3 * sizeof(uint8_t));
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
-
         pangolin::glDrawAxis(4000.f);
         pangolin::RenderVboCbo(vA, cA);
-        pangolin::FinishFrame(); // <- swap frames and process events
+        pangolin::FinishFrame();
 
-        /** ungracious global exit */
+        /** gracious exit from rendering app */
         if (pangolin::ShouldQuit()) {
             sptr_kinect->release();
             sptr_kinect->close();
             std::exit(0);
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
