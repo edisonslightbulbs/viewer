@@ -46,11 +46,8 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
     while (true) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        sptr_kinect
-            ->getCapture(); // todo: (4/7) resource race handled correctly?
-        sptr_kinect
-            ->getPclImage(); // todo: (5/7) resource race handled correctly?
-        vA.Upload((void*)sptr_kinect->getContextPcl()->data(),
+        sptr_kinect->getFrame();
+        vA.Upload((void*)sptr_kinect->getContext()->data(),
             sptr_kinect->getNumPoints() * 3
                 * sizeof(
                     float)); // todo: (6/7) resource race handled correctly?
@@ -71,8 +68,5 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
             sptr_kinect->close();
             std::exit(0);
         }
-
-        /** update point cloud every 15 ms */
-        usleep(15000);
     }
 }
