@@ -8,6 +8,6 @@
 #include "kinect.h"
 
 namespace viewer {
-void draw(Kinect& kinect);
+void draw(std::shared_ptr<Kinect>& kinect);
 }
 #endif /* RENDERER_H */
