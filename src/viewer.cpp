@@ -7,6 +7,9 @@
 #include <chrono>
 #include <thread>
 
+extern std::mutex SYNCHRONIZE;
+extern std::shared_ptr<bool> RUN_SYSTEM;
+
 void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 {
     /** create window and bind its context to the main thread */
@@ -17,9 +20,6 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 
     /**  enable mouse handler with depth testing */
     glEnable(GL_DEPTH_TEST);
-
-    /** unset the current context from the main thread */
-    // pangolin::GetBoundWindow()->RemoveCurrent();
 
     /** create vertex and colour buffer objects and register them with CUDA */
     pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
@@ -42,7 +42,7 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
               .SetHandler(new pangolin::Handler3D(camera));
 
     /** render point cloud */
-    while (true) {
+    while (RUN_SYSTEM) {
         sptr_kinect->getFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         vA.Upload((void*)sptr_kinect->getContext()->data(),
@@ -57,6 +57,7 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 
         /** gracious exit from rendering app */
         if (pangolin::ShouldQuit()) {
+            *RUN_SYSTEM = false;
             sptr_kinect->release();
             sptr_kinect->close();
             std::exit(0);
