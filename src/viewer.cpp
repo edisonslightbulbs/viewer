@@ -43,7 +43,7 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 
     /** render point cloud */
     while (RUN_SYSTEM) {
-        sptr_kinect->buildPcl();
+        sptr_kinect->capturePcl();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         vA.Upload((void*)sptr_kinect->getContext()->data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(float));
