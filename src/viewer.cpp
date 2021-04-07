@@ -7,6 +7,10 @@
 #include <chrono>
 #include <thread>
 
+extern const int FAST_PCL = 0;
+extern const int RGB_TO_DEPTH = 1;
+extern const int DEPTH_TO_RGB = 2;
+
 extern std::mutex SYNCHRONIZE;
 extern std::shared_ptr<bool> RUN_SYSTEM;
 
@@ -43,7 +47,7 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 
     /** render point cloud */
     while (RUN_SYSTEM) {
-        sptr_kinect->capturePcl();
+        sptr_kinect->capturePcl(0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         vA.Upload((void*)sptr_kinect->getContext()->data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(float));
