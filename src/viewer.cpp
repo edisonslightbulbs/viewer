@@ -11,7 +11,6 @@ extern const int FAST_PCL = 0;
 extern const int RGB_TO_DEPTH = 1;
 extern const int DEPTH_TO_RGB = 2;
 
-extern std::mutex SYNCHRONIZE;
 extern std::shared_ptr<bool> RUN_SYSTEM;
 
 void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
