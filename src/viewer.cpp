@@ -7,7 +7,6 @@
 #include <chrono>
 #include <thread>
 
-extern const int FAST_PCL = 0;
 extern const int RGB_TO_DEPTH = 1;
 extern const int DEPTH_TO_RGB = 2;
 
@@ -29,7 +28,6 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
         GL_FLOAT, 3, GL_STATIC_DRAW);
     pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
         GL_UNSIGNED_BYTE, 3, GL_STATIC_DRAW);
-    std::vector<uint8_t> colours(sptr_kinect->getNumPoints() * 3, 255);
 
     /** define camera render object for scene browsing */
     pangolin::OpenGlRenderState camera(
@@ -46,11 +44,11 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
 
     /** render point cloud */
     while (RUN_SYSTEM) {
-        sptr_kinect->capturePcl(0);
+        sptr_kinect->capturePcl(RGB_TO_DEPTH);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         vA.Upload((void*)sptr_kinect->getContext()->data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(float));
-        cA.Upload((void*)colours.data(),
+        cA.Upload((void*)sptr_kinect->getColor()->data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(uint8_t));
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
@@ -58,10 +56,11 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
         pangolin::RenderVboCbo(vA, cA);
         pangolin::FinishFrame();
 
+        sptr_kinect->release();
+
         /** gracious exit from rendering app */
         if (pangolin::ShouldQuit()) {
             *RUN_SYSTEM = false;
-            sptr_kinect->release();
             sptr_kinect->close();
             std::exit(0);
         }
