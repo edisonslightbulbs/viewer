@@ -99,19 +99,13 @@ void viewer::draw(
                   -640.0f / 480.0f)
               .SetHandler(new pangolin::Handler3D(camera));
 
-    std::pair<std::vector<float>, std::vector<uint8_t>> clusteredContext;
     while (RUN_SYSTEM) {
+        /** sense */
         sptr_kinect->record(RGB_TO_DEPTH);
-        {
-            /** let render thread access segmented point cloud */
-            std::lock_guard<std::mutex> lock(sptr_intact->m_mutex);
-            // clusteredContext = sptr_intact->m_context->getCastPcl();
-        }
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        vA.Upload((void*)clusteredContext.first.data(),
+        vA.Upload((void*)sptr_intact->getContext()->data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(float));
-        cA.Upload((void*)clusteredContext.second.data(),
+        cA.Upload((void*)sptr_intact->getColor()->data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(uint8_t));
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
