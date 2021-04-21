@@ -1,12 +1,16 @@
 #include <pangolin/gl/glvbo.h>
 #include <pangolin/pangolin.h>
 #define TINYPLY_IMPLEMENTATION
+
 #include "tinyply.h"
 
-#include "context.h"
-#include "viewer.h"
 #include <chrono>
+#include <mutex>
+#include <shared_mutex>
 #include <thread>
+
+#include "intact.h"
+#include "viewer.h"
 
 extern std::shared_ptr<bool> RUN_SYSTEM;
 
@@ -53,7 +57,6 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
         pangolin::glDrawAxis(4000.f);
         pangolin::RenderVboCbo(vA, cA);
         pangolin::FinishFrame();
-
         sptr_kinect->release();
 
         /** gracious exit from rendering app */
@@ -65,7 +68,8 @@ void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
-void viewer::draw(Context* ptr_context, std::shared_ptr<Kinect>& sptr_kinect)
+void viewer::draw(
+    std::shared_ptr<Intact>& sptr_intact, std::shared_ptr<Kinect>& sptr_kinect)
 {
     /** create window and bind its context to the main thread */
     pangolin::CreateWindowAndBind("VIGITIA", 2560, 1080);
@@ -95,22 +99,25 @@ void viewer::draw(Context* ptr_context, std::shared_ptr<Kinect>& sptr_kinect)
                   -640.0f / 480.0f)
               .SetHandler(new pangolin::Handler3D(camera));
 
+    std::pair<std::vector<float>, std::vector<uint8_t>> clusteredContext;
     while (RUN_SYSTEM) {
-        std::pair<std::vector<float>, std::vector<uint8_t>> clusters
-            = ptr_context->getCastPcl();
-
         sptr_kinect->record(RGB_TO_DEPTH);
+        {
+            /** let render thread access segmented point cloud */
+            std::lock_guard<std::mutex> lock(sptr_intact->m_mutex);
+            // clusteredContext = sptr_intact->m_context->getCastPcl();
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        vA.Upload((void*)clusters.first.data(),
+        vA.Upload((void*)clusteredContext.first.data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(float));
-        cA.Upload((void*)clusters.second.data(),
+        cA.Upload((void*)clusteredContext.second.data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(uint8_t));
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
         pangolin::glDrawAxis(4000.f);
         pangolin::RenderVboCbo(vA, cA);
         pangolin::FinishFrame();
-
         sptr_kinect->release();
 
         /** gracious exit from rendering app */
@@ -119,6 +126,6 @@ void viewer::draw(Context* ptr_context, std::shared_ptr<Kinect>& sptr_kinect)
             sptr_kinect->close();
             std::exit(0);
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
