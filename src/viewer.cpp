@@ -12,62 +12,12 @@
 #include "intact.h"
 #include "viewer.h"
 
-extern std::shared_ptr<bool> RUN_SYSTEM;
+bool segment = false;
+bool cluster = false;
 
-void viewer::draw(std::shared_ptr<Kinect>& sptr_kinect)
-{
-    /** create window and bind its context to the main thread */
-    pangolin::CreateWindowAndBind("VIGITIA", 2560, 1080);
+void view() { segment = !segment; }
+void density() { cluster = !cluster; }
 
-    /** initialize glew */
-    glewInit();
-
-    /**  enable mouse handler with depth testing */
-    glEnable(GL_DEPTH_TEST);
-
-    /** create vertex and colour buffer objects and register them with CUDA */
-    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
-        GL_FLOAT, 3, GL_STATIC_DRAW);
-    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
-        GL_UNSIGNED_BYTE, 3, GL_STATIC_DRAW);
-
-    /** define camera render object for scene browsing */
-    pangolin::OpenGlRenderState camera(
-        pangolin::ProjectionMatrix(2560, 1080, 800, 800, 1280, 540, 0.1, 10000),
-        ModelViewLookAt(-0, 2, -2, 0, 0, 0, pangolin::AxisY));
-    const int UI_WIDTH = 180;
-
-    /** add named OpenGL viewport to window and provide 3D handler */
-    pangolin::View& viewPort
-        = pangolin::Display("cam")
-              .SetBounds(0.0, 1.0, pangolin::Attach::Pix(UI_WIDTH), 1.0,
-                  -640.0f / 480.0f)
-              .SetHandler(new pangolin::Handler3D(camera));
-
-    /** render point cloud */
-    while (RUN_SYSTEM) {
-        sptr_kinect->record(RGB_TO_DEPTH);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        vA.Upload((void*)sptr_kinect->getContext()->data(),
-            sptr_kinect->getNumPoints() * 3 * sizeof(float));
-        cA.Upload((void*)sptr_kinect->getColor()->data(),
-            sptr_kinect->getNumPoints() * 3 * sizeof(uint8_t));
-        viewPort.Activate(camera);
-        glClearColor(0.0, 0.0, 0.3, 1.0);
-        pangolin::glDrawAxis(4000.f);
-        pangolin::RenderVboCbo(vA, cA);
-        pangolin::FinishFrame();
-        sptr_kinect->release();
-
-        /** gracious exit from rendering app */
-        if (pangolin::ShouldQuit()) {
-            *RUN_SYSTEM = false;
-            sptr_kinect->close();
-            std::exit(0);
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-}
 void viewer::draw(
     std::shared_ptr<Intact>& sptr_intact, std::shared_ptr<Kinect>& sptr_kinect)
 {
@@ -81,9 +31,9 @@ void viewer::draw(
     glEnable(GL_DEPTH_TEST);
 
     /** create vertex and colour buffer objects and register them with CUDA */
-    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
+    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_intact->getNumPoints(),
         GL_FLOAT, 3, GL_STATIC_DRAW);
-    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_kinect->getNumPoints(),
+    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_intact->getNumPoints(),
         GL_UNSIGNED_BYTE, 3, GL_STATIC_DRAW);
 
     /** define camera render object for scene browsing */
@@ -99,27 +49,37 @@ void viewer::draw(
                   -640.0f / 480.0f)
               .SetHandler(new pangolin::Handler3D(camera));
 
-    while (RUN_SYSTEM) {
-        /** sense */
-        sptr_kinect->record(RGB_TO_DEPTH);
+    // Demonstration of how we can register a keyboard hook to trigger a method
+    pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 's', view);
+    pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'c', density);
+
+    /** render point cloud */
+    while (!sptr_intact->isStop()) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        vA.Upload((void*)sptr_intact->getRegion()->data(),
-            sptr_kinect->getNumPoints() * 3 * sizeof(float));
-        cA.Upload((void*)sptr_intact->getRegionColor()->data(),
-            sptr_kinect->getNumPoints() * 3 * sizeof(uint8_t));
+
+        if (segment) {
+            vA.Upload((void*)sptr_intact->getRaw()->data(),
+                sptr_intact->getNumPoints() * 3 * sizeof(float));
+            cA.Upload((void*)sptr_intact->getRawColor()->data(),
+                sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
+        }
+        if (!segment) {
+            vA.Upload((void*)sptr_intact->getSegment()->data(),
+                sptr_intact->getNumPoints() * 3 * sizeof(float));
+            cA.Upload((void*)sptr_intact->getSegmentColor()->data(),
+                sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
+        }
+
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
         pangolin::glDrawAxis(4000.f);
         pangolin::RenderVboCbo(vA, cA);
         pangolin::FinishFrame();
-        sptr_kinect->release();
 
         /** gracious exit from rendering app */
         if (pangolin::ShouldQuit()) {
-            *RUN_SYSTEM = false;
-            sptr_kinect->close();
-            std::exit(0);
+            sptr_intact->raiseStopFlag();
         }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
