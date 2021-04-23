@@ -103,9 +103,9 @@ void viewer::draw(
         /** sense */
         sptr_kinect->record(RGB_TO_DEPTH);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        vA.Upload((void*)sptr_intact->getContext()->data(),
+        vA.Upload((void*)sptr_intact->getRegion()->data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(float));
-        cA.Upload((void*)sptr_intact->getColor()->data(),
+        cA.Upload((void*)sptr_intact->getRegionColor()->data(),
             sptr_kinect->getNumPoints() * 3 * sizeof(uint8_t));
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
