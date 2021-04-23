@@ -8,7 +8,6 @@
 #include "kinect.h"
 
 namespace viewer {
-void draw(std::shared_ptr<Kinect>& kinect);
 void draw(
     std::shared_ptr<Intact>& sptr_intact, std::shared_ptr<Kinect>& sptr_kinect);
 }
