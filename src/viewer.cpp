@@ -12,11 +12,15 @@
 #include "intact.h"
 #include "viewer.h"
 
-bool segment = false;
-bool cluster = false;
+int mode = 0;
 
-void view() { segment = !segment; }
-void density() { cluster = !cluster; }
+void view()
+{
+    mode++;
+    if (mode == 3) {
+        mode = 0;
+    }
+}
 
 void viewer::draw(
     std::shared_ptr<Intact>& sptr_intact, std::shared_ptr<Kinect>& sptr_kinect)
@@ -49,24 +53,27 @@ void viewer::draw(
                   -640.0f / 480.0f)
               .SetHandler(new pangolin::Handler3D(camera));
 
-    // Demonstration of how we can register a keyboard hook to trigger a method
-    pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 's', view);
-    pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'c', density);
+    // register key press to trigger different view perspective
+    pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'c', view);
 
     /** render point cloud */
     while (!sptr_intact->isStop()) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (segment) {
+        if (mode == 0) {
             vA.Upload((void*)sptr_intact->getRaw()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
             cA.Upload((void*)sptr_intact->getRawColor()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
-        }
-        if (!segment) {
+        } else if (mode == 1) {
             vA.Upload((void*)sptr_intact->getSegment()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
             cA.Upload((void*)sptr_intact->getSegmentColor()->data(),
+                sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
+        } else if (mode == 2) {
+            vA.Upload((void*)sptr_intact->getRegion()->data(),
+                sptr_intact->getNumPoints() * 3 * sizeof(float));
+            cA.Upload((void*)sptr_intact->getRegionColor()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         }
 
