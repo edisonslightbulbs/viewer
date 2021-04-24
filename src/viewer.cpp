@@ -17,7 +17,7 @@ int mode = 0;
 void view()
 {
     mode++;
-    if (mode == 3) {
+    if (mode == 4) {
         mode = 0;
     }
 }
@@ -74,6 +74,11 @@ void viewer::draw(
             vA.Upload((void*)sptr_intact->getRegion()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
             cA.Upload((void*)sptr_intact->getRegionColor()->data(),
+                sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
+        } else if (mode == 3) {
+            vA.Upload((void*)sptr_intact->getObject()->data(),
+                sptr_intact->getNumPoints() * 3 * sizeof(float));
+            cA.Upload((void*)sptr_intact->getObjectColor()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         }
 
