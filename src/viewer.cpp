@@ -7,7 +7,6 @@
 #include <chrono>
 #include <mutex>
 #include <shared_mutex>
-#include <thread>
 
 #include "intact.h"
 #include "viewer.h"
@@ -91,6 +90,5 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
         if (pangolin::ShouldQuit()) {
             sptr_intact->raiseStopFlag();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
