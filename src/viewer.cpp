@@ -64,14 +64,14 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
             cA.Upload((void*)sptr_intact->getImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         } else if (mode == 1) {
-            vA.Upload((void*)sptr_intact->getSegmentPcl()->data(),
+            vA.Upload((void*)sptr_intact->getSegmentedPcl()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getSegmentImg()->data(),
+            cA.Upload((void*)sptr_intact->getSegmentedImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         } else if (mode == 2) {
-            vA.Upload((void*)sptr_intact->getClustersPcl()->data(),
+            vA.Upload((void*)sptr_intact->getClusteredPcl()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getClustersImg()->data(),
+            cA.Upload((void*)sptr_intact->getClusteredImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         } else if (mode == 3) {
             vA.Upload((void*)sptr_intact->getTabletopPcl()->data(),
