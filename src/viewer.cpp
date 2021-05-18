@@ -59,24 +59,24 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (mode == 0) {
-            vA.Upload((void*)sptr_intact->getPcl()->data(),
+            vA.Upload((void*)sptr_intact->getRawPcl()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getImg()->data(),
+            cA.Upload((void*)sptr_intact->getRawImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         } else if (mode == 1) {
-            vA.Upload((void*)sptr_intact->getSegmentedPcl()->data(),
+            vA.Upload((void*)sptr_intact->getSegPcl()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getSegmentedImg()->data(),
+            cA.Upload((void*)sptr_intact->getSegImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         } else if (mode == 2) {
-            vA.Upload((void*)sptr_intact->getClusteredPcl()->data(),
+            vA.Upload((void*)sptr_intact->getCluPcl()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getClusteredImg()->data(),
+            cA.Upload((void*)sptr_intact->getCluImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         } else if (mode == 3) {
-            vA.Upload((void*)sptr_intact->getTabletopPcl()->data(),
+            vA.Upload((void*)sptr_intact->getTtpPcl()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getTabletopImg()->data(),
+            cA.Upload((void*)sptr_intact->getTtpImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         }
 
