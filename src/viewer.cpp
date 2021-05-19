@@ -69,14 +69,14 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
             cA.Upload((void*)sptr_intact->getSegImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         } else if (mode == 2) {
-            vA.Upload((void*)sptr_intact->getCluPcl()->data(),
+            vA.Upload((void*)sptr_intact->getClustPcl()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getCluImg()->data(),
+            cA.Upload((void*)sptr_intact->getClustImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         } else if (mode == 3) {
-            vA.Upload((void*)sptr_intact->getTtpPcl()->data(),
+            vA.Upload((void*)sptr_intact->getTtopPcl()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getTtpImg()->data(),
+            cA.Upload((void*)sptr_intact->getTtopImg()->data(),
                 sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
         }
 
