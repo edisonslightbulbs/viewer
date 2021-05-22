@@ -62,24 +62,35 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
 
     while (!sptr_intact->isStop()) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        // if (mode == 0) {
 
-        // pcl = *sptr_intact->getSensorPcl();
-        // img = *sptr_intact->getSensorImg_GL();
-        // vA.Upload((void *) pcl, pclsize);
-        // cA.Upload((void *) img, imgsize);
+        // render sensor point cloud
+        if (mode == 0) {
+            pcl = *sptr_intact->getSensorPcl();
+            img = *sptr_intact->getSensorImg_GL();
+            vA.Upload((void*)pcl, pclsize);
+            cA.Upload((void*)img, imgsize);
 
-        pcl = *sptr_intact->getIntactPcl();
-        img = *sptr_intact->getIntactImg_GL();
-        vA.Upload((void*)pcl, pclsize);
-        cA.Upload((void*)img, imgsize);
+            // render intact's point cloud
+        } else if (mode == 1) {
+            pcl = *sptr_intact->getIntactPcl();
+            img = *sptr_intact->getIntactImg_GL();
+            vA.Upload((void*)pcl, pclsize);
+            cA.Upload((void*)img, imgsize);
 
-        // } else if (mode == 1) {
-        // pcl = *sptr_intact->getSegPclBuf();
-        // img = *sptr_intact->getSegImgBuf_GL();
-        // vA.Upload((void *) pcl, pclsize);
-        // cA.Upload((void *) img, imgsize);
-        //} // 2 and 3 ...
+            // render chromakey background
+        } else if (mode == 2) {
+            pcl = *sptr_intact->getChromaBkgdPcl();
+            img = *sptr_intact->getChromaBkgdImg_GL();
+            vA.Upload((void*)pcl, pclsize);
+            cA.Upload((void*)img, imgsize);
+
+            // render colored clusters
+        } else if (mode == 3) {
+            // pcl = *sptr_intact->getChromaBkgdPcl();
+            // img = *sptr_intact->getChromaBkgdImg_GL();
+            // vA.Upload((void*)pcl, pclsize);
+            // cA.Upload((void*)img, imgsize);
+        }
 
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
