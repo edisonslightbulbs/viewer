@@ -33,9 +33,9 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
     glEnable(GL_DEPTH_TEST);
 
     /** create vertex and colour buffer objects and register them with CUDA */
-    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_intact->getNumPoints(),
-        GL_FLOAT, 3, GL_STATIC_DRAW);
-    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_intact->getNumPoints(),
+    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_intact->m_numPts,
+        GL_SHORT, 3, GL_STATIC_DRAW);
+    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_intact->m_numPts,
         GL_UNSIGNED_BYTE, 3, GL_STATIC_DRAW);
 
     /** define camera render object for scene browsing */
@@ -54,31 +54,32 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
     // register key press to trigger different view perspective
     pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'c', view);
 
-    /** render point cloud */
+    /** pool resources, and render */
+    uint32_t pclsize = sptr_intact->m_pclsize * sizeof(int16_t);
+    uint32_t imgsize = sptr_intact->m_pclsize * sizeof(uint8_t);
+    int16_t* pcl;
+    uint8_t* img;
+
     while (!sptr_intact->isStop()) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // if (mode == 0) {
 
-        if (mode == 0) {
-            vA.Upload((void*)sptr_intact->getRawPcl()->data(),
-                sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getRawImg()->data(),
-                sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
-        } else if (mode == 1) {
-            vA.Upload((void*)sptr_intact->getSegPcl()->data(),
-                sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getSegImg()->data(),
-                sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
-        } else if (mode == 2) {
-            vA.Upload((void*)sptr_intact->getClustPcl()->data(),
-                sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getClustImg()->data(),
-                sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
-        } else if (mode == 3) {
-            vA.Upload((void*)sptr_intact->getTtopPcl()->data(),
-                sptr_intact->getNumPoints() * 3 * sizeof(float));
-            cA.Upload((void*)sptr_intact->getTtopImg()->data(),
-                sptr_intact->getNumPoints() * 3 * sizeof(uint8_t));
-        }
+        // pcl = *sptr_intact->getSensorPcl();
+        // img = *sptr_intact->getSensorImg_GL();
+        // vA.Upload((void *) pcl, pclsize);
+        // cA.Upload((void *) img, imgsize);
+
+        pcl = *sptr_intact->getIntactPcl();
+        img = *sptr_intact->getIntactImg_GL();
+        vA.Upload((void*)pcl, pclsize);
+        cA.Upload((void*)img, imgsize);
+
+        // } else if (mode == 1) {
+        // pcl = *sptr_intact->getSegPclBuf();
+        // img = *sptr_intact->getSegImgBuf_GL();
+        // vA.Upload((void *) pcl, pclsize);
+        // cA.Upload((void *) img, imgsize);
+        //} // 2 and 3 ...
 
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
