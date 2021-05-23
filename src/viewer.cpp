@@ -33,9 +33,9 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
     glEnable(GL_DEPTH_TEST);
 
     /** create vertex and colour buffer objects and register them with CUDA */
-    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_intact->m_numPts,
+    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_intact->m_numPoints,
         GL_SHORT, 3, GL_STATIC_DRAW);
-    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_intact->m_numPts,
+    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_intact->m_numPoints,
         GL_UNSIGNED_BYTE, 3, GL_STATIC_DRAW);
 
     /** define camera render object for scene browsing */
@@ -63,34 +63,25 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
     while (!sptr_intact->isStop()) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // render sensor point cloud
         if (mode == 0) {
+            // render sensor point cloud
             pcl = *sptr_intact->getSensorPcl();
             img = *sptr_intact->getSensorImg_GL();
-            vA.Upload((void*)pcl, pclsize);
-            cA.Upload((void*)img, imgsize);
-
-            // render intact's point cloud
         } else if (mode == 1) {
+            // render intact's point cloud
             pcl = *sptr_intact->getIntactPcl();
             img = *sptr_intact->getIntactImg_GL();
-            vA.Upload((void*)pcl, pclsize);
-            cA.Upload((void*)img, imgsize);
-
-            // render chromakey background
         } else if (mode == 2) {
+            // render chromakey background
             pcl = *sptr_intact->getChromaBkgdPcl();
             img = *sptr_intact->getChromaBkgdImg_GL();
-            vA.Upload((void*)pcl, pclsize);
-            cA.Upload((void*)img, imgsize);
-
-            // render colored clusters
         } else if (mode == 3) {
+            // render colored clusters
             // pcl = *sptr_intact->getChromaBkgdPcl();
             // img = *sptr_intact->getChromaBkgdImg_GL();
-            // vA.Upload((void*)pcl, pclsize);
-            // cA.Upload((void*)img, imgsize);
         }
+        vA.Upload((void*)pcl, pclsize);
+        cA.Upload((void*)img, imgsize);
 
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
