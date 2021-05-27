@@ -21,8 +21,12 @@ void view()
     }
 }
 
-void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
+void viewer::draw(std::shared_ptr<Intact>& sptr_i3d)
 {
+    // get dimensions
+    int w = sptr_i3d->getDepthWidth();
+    int h = sptr_i3d->getDepthHeight();
+
     /** create window and bind its context to the main thread */
     pangolin::CreateWindowAndBind("VIGITIA", 2560, 1080);
 
@@ -33,10 +37,10 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
     glEnable(GL_DEPTH_TEST);
 
     /** create vertex and colour buffer objects and register them with CUDA */
-    pangolin::GlBuffer vA(pangolin::GlArrayBuffer, sptr_intact->m_numPoints,
-        GL_SHORT, 3, GL_STATIC_DRAW);
-    pangolin::GlBuffer cA(pangolin::GlArrayBuffer, sptr_intact->m_numPoints,
-        GL_UNSIGNED_BYTE, 3, GL_STATIC_DRAW);
+    pangolin::GlBuffer vA(
+        pangolin::GlArrayBuffer, w * h, GL_SHORT, 3, GL_STATIC_DRAW);
+    pangolin::GlBuffer cA(
+        pangolin::GlArrayBuffer, w * h, GL_UNSIGNED_BYTE, 4, GL_STATIC_DRAW);
 
     /** define camera render object for scene browsing */
     pangolin::OpenGlRenderState camera(
@@ -55,33 +59,22 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
     pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'c', view);
 
     /** pool resources, and render */
-    uint32_t pclsize = sptr_intact->m_pclsize * sizeof(int16_t);
-    uint32_t imgsize = sptr_intact->m_pclsize * sizeof(uint8_t);
-    int16_t* pcl;
-    uint8_t* img;
+    int16_t* pCloudFrame;
+    uint8_t* imgFrame;
 
-    while (!sptr_intact->isStop()) {
+    while (!sptr_i3d->isStop()) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (mode == 0) {
-            // render sensor point cloud
-            pcl = *sptr_intact->getSensorPcl();
-            img = *sptr_intact->getSensorImg_GL();
+            pCloudFrame = sptr_i3d->getPCloudFrame()->data();
+            imgFrame = sptr_i3d->getImgFrame_GL()->data();
         } else if (mode == 1) {
-            // render intact's point cloud
-            pcl = *sptr_intact->getIntactPcl();
-            img = *sptr_intact->getIntactImg_GL();
-        } else if (mode == 2) {
-            // render chromakey background
-            pcl = *sptr_intact->getChromaBkgdPcl();
-            img = *sptr_intact->getChromaBkgdImg_GL();
-        } else if (mode == 3) {
-            // render colored clusters
-            // pcl = *sptr_intact->getChromaBkgdPcl();
-            // img = *sptr_intact->getChromaBkgdImg_GL();
+            pCloudFrame = sptr_i3d->getPCloudSegFrame()->data();
+            imgFrame = sptr_i3d->getImgSegFrame_GL()->data();
         }
-        vA.Upload((void*)pcl, pclsize);
-        cA.Upload((void*)img, imgsize);
+
+        vA.Upload((void*)pCloudFrame, w * h * 3 * sizeof(int16_t));
+        cA.Upload((void*)imgFrame, w * h * 4 * sizeof(uint8_t));
 
         viewPort.Activate(camera);
         glClearColor(0.0, 0.0, 0.3, 1.0);
@@ -91,7 +84,7 @@ void viewer::draw(std::shared_ptr<Intact>& sptr_intact)
 
         /** gracious exit from rendering app */
         if (pangolin::ShouldQuit()) {
-            sptr_intact->raiseStopFlag();
+            sptr_i3d->raiseStopFlag();
         }
     }
 }
