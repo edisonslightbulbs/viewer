@@ -16,7 +16,7 @@ int mode = 0;
 void view()
 {
     mode++;
-    if (mode == 4) {
+    if (mode == 2) {
         mode = 0;
     }
 }
