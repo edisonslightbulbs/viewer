@@ -4,15 +4,10 @@
 
 #include "tinyply.h"
 
-#include <chrono>
-#include <mutex>
-#include <shared_mutex>
-
 #include "i3d.h"
 #include "viewer.h"
 
 int mode = 0;
-
 void view()
 {
     mode++;
@@ -21,7 +16,7 @@ void view()
     }
 }
 
-void viewer::draw(std::shared_ptr<i3d>& sptr_i3d)
+void viewer::render(std::shared_ptr<I3d>& sptr_i3d)
 {
     // get dimensions
     int w = sptr_i3d->getDepthWidth();
