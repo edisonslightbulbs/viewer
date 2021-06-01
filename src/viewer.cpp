@@ -66,6 +66,10 @@ void viewer::render(std::shared_ptr<I3d>& sptr_i3d)
         } else if (mode == 1) {
             pCloudFrame = sptr_i3d->getPCloudSegFrame()->data();
             imgFrame = sptr_i3d->getImgSegFrame_GL()->data();
+        } else if (mode == 2) {
+            auto clusters = sptr_i3d->getColClusters();
+            pCloudFrame = clusters->first;
+            imgFrame = clusters->second;
         }
 
         vA.Upload((void*)pCloudFrame, w * h * 3 * sizeof(int16_t));
