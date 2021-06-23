@@ -11,7 +11,7 @@ int mode = 0;
 void view()
 {
     mode++;
-    if (mode == 3) {
+    if (mode == 2) {
         mode = 0;
     }
 }
@@ -66,11 +66,12 @@ void viewer::render(std::shared_ptr<I3d>& sptr_i3d)
         } else if (mode == 1) {
             ptr_pCloudFrame = sptr_i3d->getPCloudSegFrame()->data();
             ptr_imgFrame = sptr_i3d->getImgSegFrame_GL()->data();
-        } else if (mode == 2) {
-            auto clusters = sptr_i3d->getColClusters();
-            ptr_pCloudFrame = clusters->first;
-            ptr_imgFrame = clusters->second;
         }
+        // else if (mode == 2) {
+        //     auto clusters = sptr_i3d->getColClusters();
+        //     ptr_pCloudFrame = clusters->first;
+        //     ptr_imgFrame = clusters->second;
+        // }
 
         vA.Upload((void*)ptr_pCloudFrame, w * h * 3 * sizeof(int16_t));
         cA.Upload((void*)ptr_imgFrame, w * h * 4 * sizeof(uint8_t));
