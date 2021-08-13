@@ -17,7 +17,7 @@ void view()
     }
 }
 
-void viewer::render(std::shared_ptr<I3d>& sptr_i3d)
+void viewer::render(std::shared_ptr<i3d>& sptr_i3d)
 {
     // get dimensions
     int w = sptr_i3d->getDWidth();
