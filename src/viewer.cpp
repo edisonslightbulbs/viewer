@@ -5,6 +5,7 @@
 #include "tinyply.h"
 
 #include "i3d.h"
+#include "i3dmacros.hpp"
 #include "viewer.h"
 
 int mode = 0;
@@ -57,7 +58,7 @@ void viewer::render(std::shared_ptr<I3d>& sptr_i3d)
     int16_t* ptr_pCloudFrame;
     uint8_t* ptr_imgFrame;
 
-    while (!sptr_i3d->isStop()) {
+    while (RUN) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (mode == 0) {
