@@ -65,7 +65,7 @@ void viewer::render(std::shared_ptr<i3d>& sptr_i3d)
             ptr_pCloudFrame = sptr_i3d->getXYZ()->data();
             ptr_imgFrame = sptr_i3d->getRGBA()->data();
         } else if (mode == 1) {
-            ptr_pCloudFrame = sptr_i3d->getPCloudSegFrame()->data();
+            ptr_pCloudFrame = sptr_i3d->getXYZSeg()->data();
             ptr_imgFrame = sptr_i3d->getRGBASeg()->data();
         }
         // else if (mode == 2) {
